@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Database</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --text-color: #000000;
+            --theme-blue: #e3f2fd;
+            --link-color: #0d6efd;
+        }
+
+        [data-bs-theme="dark"] {
+            --primary-bg: #121212;
+            --text-color: #ffffff;
+            --theme-blue: #1e3a5f;
+            --link-color: #60a5fa;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar {
+            background-color: var(--theme-blue) !important;
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: var(--theme-blue) !important;
+        }
+
+        [data-bs-theme="dark"] .navbar-light .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .logo-img {
+            max-height: 50px;
+        }
+
+        .theme-toggle {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .theme-icon {
+            font-size: 1.2rem;
+        }
+
+        .search-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: var(--theme-blue);
+            border-radius: 5px;
+            color: var(--text-color);
+        }
+
+        .table {
+            background-color: var(--theme-blue);
+            color: var(--text-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .patient-link {
+            color: var(--link-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .patient-link:hover {
+            text-decoration: underline;
+            color: var(--link-color);
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-color);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .action-bar {
+            background-color: var(--theme-blue);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .action-bar .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .selection-info {
+            margin-right: auto;
+            font-weight: 500;
+        }
+
+        .table th:first-child,
+        .table td:first-child {
+            width: 40px;
+            text-align: center;
+        }
+
+        .delete-btn {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .modal-content {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+        }
+
+        .modal-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-footer {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .format-option:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .format-option i {
+            font-size: 1.5rem;
+        }
+
+        .import-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .import-zone.dragover {
+            border-color: var(--link-color);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .import-zone i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--link-color);
+        }
+
+        #importFileInput {
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Sri Shanmuga Pharma" class="logo-img">
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="theme-toggle">
+                    <i class="bi bi-sun-fill theme-icon"></i>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <i class="bi bi-moon-fill theme-icon"></i>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/">Dashboard</a>
+                    <a class="nav-link" href="/add_patient">Add Patient</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Patient Database</h2>
+        
+        <div class="search-section">
+            <h3>Search Patients</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <select class="form-select" id="searchType" onchange="liveSearch()">
+                        <option value="name">Name</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="date">Date</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" class="form-control" id="searchValue" oninput="liveSearch()">
+                </div>
+            </div>
+        </div>
+
+        <div id="patientList" class="mt-4">
+            <div class="action-bar">
+                <div class="selection-info">
+                    <span id="selectedCount">0</span> records selected
+                </div>
+                <button class="btn btn-danger" onclick="deleteSelected()" id="deleteBtn" disabled>
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <button class="btn btn-primary" onclick="showImportModal()">
+                    <i class="bi bi-upload"></i> Import
+                </button>
+                <button class="btn btn-success" onclick="showExportModal('selected')" id="exportSelectedBtn" disabled>
+                    <i class="bi bi-download"></i> Export Selected
+                </button>
+                <button class="btn btn-success" onclick="showExportModal('all')">
+                    <i class="bi bi-download"></i> Export All
+                </button>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)">
+                        </th>
+                        <th>Name</th>
+                        <th>Mobile</th>
+                        <th>Visit Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="patientTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Format</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="format-option" onclick="exportData('csv')">
+                        <i class="bi bi-filetype-csv"></i>
+                        <div>
+                            <h6 class="mb-0">CSV File</h6>
+                            <small class="text-muted">Export as comma-separated values</small>
+                        </div>
+                    </div>
+                    <div class="format-option" onclick="exportData('xlsx')">
+                        <i class="bi bi-file-earmark-excel"></i>
+                        <div>
+                            <h6 class="mb-0">Excel Spreadsheet</h6>
+                            <small class="text-muted">Export as XLSX file</small>
+                        </div>
+                    </div>
+                    <div class="format-option" onclick="exportData('docx')">
+                        <i class="bi bi-file-earmark-word"></i>
+                        <div>
+                            <h6 class="mb-0">Word Document</h6>
+                            <small class="text-muted">Export as DOCX file</small>
+                        </div>
+                    </div>
+                    <div class="format-option" onclick="exportData('db')">
+                        <i class="bi bi-database"></i>
+                        <div>
+                            <h6 class="mb-0">SQLite Database</h6>
+                            <small class="text-muted">Export as DB file</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Import Records</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="import-zone" id="importZone" onclick="document.getElementById('importFileInput').click()">
+                        <i class="bi bi-cloud-upload"></i>
+                        <h5>Drop CSV file here</h5>
+                        <p class="text-muted">or click to select file</p>
+                    </div>
+                    <input type="file" id="importFileInput" accept=".csv">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.checked = savedTheme === 'dark';
+
+        themeToggle.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Initialize search date picker
+        const searchInput = document.getElementById('searchValue');
+        const searchType = document.getElementById('searchType');
+        let searchDatePicker;
+
+        searchType.addEventListener('change', function() {
+            if (this.value === 'date') {
+                searchDatePicker = flatpickr(searchInput, {
+                    dateFormat: "d-m-Y"
+                });
+            } else if (searchDatePicker) {
+                searchDatePicker.destroy();
+                searchInput.value = '';
+            }
+            liveSearch();
+        });
+
+        let searchTimeout = null;
+        function liveSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const type = document.getElementById('searchType').value;
+                const value = document.getElementById('searchValue').value;
+
+                try {
+                    let url = '/get_all_patients';
+                    if (value.trim()) {
+                        url = `/search_patients?type=${type}&value=${value}`;
+                    }
+                    const response = await fetch(url);
+                    const patients = await response.json();
+                    displayPatients(patients);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 300);
+        }
+
+        function displayPatients(patients) {
+            const tbody = document.getElementById('patientTableBody');
+            if (patients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No patients found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = patients.map(patient => `
+                <tr>
+                    <td>
+                        <input type="checkbox" class="patient-checkbox" value="${patient.id}" onchange="updateSelection()">
+                    </td>
+                    <td><a href="/patient/${patient.id}" class="patient-link">${patient.name}</a></td>
+                    <td>${patient.mobile}</td>
+                    <td>${patient.visit_date}</td>
+                    <td>
+                        <i class="bi bi-trash delete-btn" onclick="deletePatient(${patient.id})"></i>
+                    </td>
+                </tr>
+            `).join('');
+            updateSelection();
+        }
+
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('.patient-checkbox:checked');
+            const count = checkboxes.length;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('deleteBtn').disabled = count === 0;
+            document.getElementById('exportSelectedBtn').disabled = count === 0;
+            document.getElementById('selectAll').checked = 
+                count > 0 && count === document.querySelectorAll('.patient-checkbox').length;
+        }
+
+        function toggleSelectAll(checked) {
+            document.querySelectorAll('.patient-checkbox').forEach(checkbox => {
+                checkbox.checked = checked;
+            });
+            updateSelection();
+        }
+
+        async function deleteSelected() {
+            if (!confirm('Are you sure you want to delete the selected records?')) return;
+            
+            const selectedIds = Array.from(document.querySelectorAll('.patient-checkbox:checked'))
+                .map(checkbox => parseInt(checkbox.value));
+            
+            try {
+                const response = await fetch('/delete_patients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ patient_ids: selectedIds }),
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    liveSearch();
+                } else {
+                    alert('Error deleting records: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting records: ' + error);
+            }
+        }
+
+        async function deletePatient(id) {
+            if (!confirm('Are you sure you want to delete this record?')) return;
+            
+            try {
+                const response = await fetch('/delete_patients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ patient_ids: [id] }),
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    liveSearch();
+                } else {
+                    alert('Error deleting record: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting record: ' + error);
+            }
+        }
+
+        let exportType = 'all';
+        
+        function showExportModal(type) {
+            exportType = type;
+            new bootstrap.Modal(document.getElementById('exportModal')).show();
+        }
+
+        function showImportModal() {
+            new bootstrap.Modal(document.getElementById('importModal')).show();
+        }
+
+        function exportData(format) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+            modal.hide();
+
+            if (exportType === 'selected') {
+                const selectedIds = Array.from(document.querySelectorAll('.patient-checkbox:checked'))
+                    .map(checkbox => checkbox.value)
+                    .join(',');
+                window.location.href = `/export_patients?patient_ids=${selectedIds}&format=${format}`;
+            } else {
+                window.location.href = `/export_patients?format=${format}`;
+            }
+        }
+
+        // Import functionality
+        const importZone = document.getElementById('importZone');
+        const importFileInput = document.getElementById('importFileInput');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            importZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            importZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            importZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            importZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            importZone.classList.remove('dragover');
+        }
+
+        importZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const file = dt.files[0];
+            handleFile(file);
+        }
+
+        importFileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        async function handleFile(file) {
+            if (!file) return;
+            
+            if (!file.name.endsWith('.csv')) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/import_patients', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+                    modal.hide();
+                    liveSearch();
+                    importFileInput.value = '';
+                } else {
+                    alert('Error importing records: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error importing records: ' + error);
+            }
+        }
+
+        // Load all patients when the page loads
+        liveSearch();
+    </script>
+</body>
+</html>

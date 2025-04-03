@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management System</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --text-color: #000000;
+        }
+
+        [data-bs-theme="dark"] {
+            --primary-bg: #121212;
+            --text-color: #ffffff;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar {
+            background-color: #e3f2fd !important;
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: #1e1e1e !important;
+        }
+
+        .logo-img {
+            max-height: 50px;
+        }
+
+        .theme-toggle {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .theme-icon {
+            font-size: 1.2rem;
+        }
+
+        .prescription-table {
+            margin-top: 20px;
+        }
+
+        .search-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo-img">
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="theme-toggle">
+                    <i class="bi bi-sun-fill theme-icon"></i>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <i class="bi bi-moon-fill theme-icon"></i>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/">Dashboard</a>
+                    <a class="nav-link" href="/database">View Database</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2>Patient Registration</h2>
+        <form id="patientForm">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Patient Name</label>
+                    <input type="text" class="form-control" id="name" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="mobile" class="form-label">Mobile Number</label>
+                    <input type="tel" class="form-control" id="mobile" required>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="visit_date" class="form-label">Date of Visit</label>
+                    <input type="text" class="form-control" id="visit_date" required>
+                </div>
+            </div>
+
+            <h4>Prescription</h4>
+            <table class="table prescription-table" id="prescriptionTable">
+                <thead>
+                    <tr>
+                        <th>Medicine Type</th>
+                        <th>Medicine Name</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-secondary mb-3" onclick="addPrescriptionRow()">Add Medicine</button>
+
+            <div class="row mb-3">
+                <div class="col-md-6 offset-md-6">
+                    <h5>Grand Total: ₹<span id="grandTotal">0.00</span></h5>
+                    <div class="input-group mb-3">
+                        <input type="number" class="form-control" id="discount" value="0" min="0" max="100" step="1" onchange="calculateFinalTotal()">
+                        <span class="input-group-text">% Discount</span>
+                    </div>
+                    <h5>Discount Amount: ₹<span id="discountAmount">0.00</span></h5>
+                    <h5>Total Price: ₹<span id="totalPrice">0.00</span></h5>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Patient</button>
+        </form>
+
+        <div class="search-section">
+            <h3>Search Patients</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <select class="form-select" id="searchType" onchange="liveSearch()">
+                        <option value="name">Name</option>
+                        <option value="mobile">Mobile</option>
+                        <option value="date">Date</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" class="form-control" id="searchValue" oninput="liveSearch()">
+                </div>
+            </div>
+            <div id="searchResults" class="mt-3"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.checked = savedTheme === 'dark';
+
+        themeToggle.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Initialize date picker
+        flatpickr("#visit_date", {
+            dateFormat: "d-m-Y",
+            defaultDate: "today"
+        });
+
+        // Initialize search date picker
+        const searchInput = document.getElementById('searchValue');
+        const searchType = document.getElementById('searchType');
+        let searchDatePicker;
+
+        searchType.addEventListener('change', function() {
+            if (this.value === 'date') {
+                searchDatePicker = flatpickr(searchInput, {
+                    dateFormat: "d-m-Y"
+                });
+            } else if (searchDatePicker) {
+                searchDatePicker.destroy();
+                searchInput.value = '';
+            }
+        });
+
+        function addPrescriptionRow() {
+            const tbody = document.querySelector('#prescriptionTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <select class="form-select medicine-type" onchange="calculateRowTotal(this.closest('tr'))">
+                        <option value="Tablet">Tablet</option>
+                        <option value="Capsule">Capsule</option>
+                        <option value="Syrup">Syrup</option>
+                    </select>
+                </td>
+                <td><input type="text" class="form-control medicine-name" required></td>
+                <td><input type="number" class="form-control quantity" value="1" min="1" onchange="calculateRowTotal(this.closest('tr'))" required></td>
+                <td><input type="number" class="form-control price" value="0" min="0" step="0.01" onchange="calculateRowTotal(this.closest('tr'))" required></td>
+                <td><span class="row-total">0.00</span></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calculateGrandTotal()">Remove</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function calculateRowTotal(row) {
+            const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.price').value) || 0;
+            const total = quantity * price;
+            row.querySelector('.row-total').textContent = total.toFixed(2);
+            calculateGrandTotal();
+        }
+
+        function calculateGrandTotal() {
+            const totals = Array.from(document.querySelectorAll('.row-total'))
+                .map(el => parseFloat(el.textContent) || 0);
+            const grandTotal = totals.reduce((sum, val) => sum + val, 0);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+            calculateFinalTotal();
+        }
+
+        function calculateFinalTotal() {
+            const grandTotal = parseFloat(document.getElementById('grandTotal').textContent) || 0;
+            const discountPercentage = parseFloat(document.getElementById('discount').value) || 0;
+            const discountAmount = (grandTotal * discountPercentage) / 100;
+            const totalPrice = Math.max(0, grandTotal - discountAmount);
+            
+            document.getElementById('discountAmount').textContent = discountAmount.toFixed(2);
+            document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+        }
+
+        let searchTimeout = null;
+        function liveSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                const type = document.getElementById('searchType').value;
+                const value = document.getElementById('searchValue').value;
+                
+                if (!value.trim()) {
+                    document.getElementById('searchResults').innerHTML = '';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/search_patients?type=${type}&value=${value}`);
+                    const patients = await response.json();
+                    displaySearchResults(patients);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }, 300); // Add a small delay to prevent too many requests
+        }
+
+        document.getElementById('patientForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const prescriptionRows = Array.from(document.querySelectorAll('#prescriptionTable tbody tr'))
+                .map(row => ({
+                    medicine_type: row.querySelector('.medicine-type').value,
+                    medicine_name: row.querySelector('.medicine-name').value,
+                    quantity: parseInt(row.querySelector('.quantity').value),
+                    price: parseFloat(row.querySelector('.price').value),
+                    total: parseFloat(row.querySelector('.row-total').textContent)
+                }));
+
+            const patientData = {
+                name: document.getElementById('name').value,
+                mobile: document.getElementById('mobile').value,
+                visit_date: document.getElementById('visit_date').value,
+                prescription: prescriptionRows,
+                grand_total: parseFloat(document.getElementById('grandTotal').textContent),
+                discount: parseFloat(document.getElementById('discount').value) || 0,
+                discount_amount: parseFloat(document.getElementById('discountAmount').textContent),
+                total_price: parseFloat(document.getElementById('totalPrice').textContent)
+            };
+
+            try {
+                const response = await fetch('/add_patient', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(patientData)
+                });
+
+                if (response.ok) {
+                    alert('Patient added successfully!');
+                    this.reset();
+                    document.querySelector('#prescriptionTable tbody').innerHTML = '';
+                    document.getElementById('grandTotal').textContent = '0.00';
+                    document.getElementById('discount').value = '0';
+                    document.getElementById('discountAmount').textContent = '0.00';
+                    document.getElementById('totalPrice').textContent = '0.00';
+                    document.getElementById('visit_date').value = new Date().toLocaleDateString('en-GB');
+                    addPrescriptionRow();
+                } else {
+                    alert('Error adding patient');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error adding patient');
+            }
+        });
+
+        function displaySearchResults(patients) {
+            const resultsDiv = document.getElementById('searchResults');
+            if (patients.length === 0) {
+                resultsDiv.innerHTML = '<p>No patients found</p>';
+                return;
+            }
+
+            let html = '<table class="table"><thead><tr><th>Name</th><th>Mobile</th><th>Visit Date</th><th>Grand Total</th><th>Discount %</th><th>Discount Amount</th><th>Total Price</th></tr></thead><tbody>';
+            patients.forEach(patient => {
+                html += `
+                    <tr>
+                        <td>${patient.name}</td>
+                        <td>${patient.mobile}</td>
+                        <td>${patient.visit_date}</td>
+                        <td>₹${patient.grand_total.toFixed(2)}</td>
+                        <td>${patient.discount}%</td>
+                        <td>₹${patient.discount_amount.toFixed(2)}</td>
+                        <td>₹${patient.total_price.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            html += '</tbody></table>';
+            resultsDiv.innerHTML = html;
+        }
+
+        // Add initial prescription row
+        addPrescriptionRow();
+    </script>
+</body>
+</html>

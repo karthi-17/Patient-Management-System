@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Management Application - Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --text-color: #000000;
+            --card-hover-transform: scale(1.05);
+        }
+
+        [data-bs-theme="dark"] {
+            --primary-bg: #121212;
+            --text-color: #ffffff;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar {
+            background-color: #e3f2fd !important;
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: #1e1e1e !important;
+        }
+
+        .logo-img {
+            max-height: 50px;
+        }
+
+        .theme-toggle {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .theme-icon {
+            font-size: 1.2rem;
+        }
+
+        .dashboard-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard-card {
+            width: 200px;
+            height: 200px;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s;
+            border: none;
+        }
+
+        .dashboard-card:hover {
+            transform: var(--card-hover-transform);
+            color: white;
+        }
+
+        .dashboard-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .customers-card {
+            background-color: #2196F3;
+        }
+
+        .new-customer-card {
+            background-color: #4CAF50;
+        }
+
+        [data-bs-theme="dark"] .navbar-light .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Sri Shanmuga Pharma" class="logo-img">
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="theme-toggle">
+                    <i class="bi bi-sun-fill theme-icon"></i>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <i class="bi bi-moon-fill theme-icon"></i>
+                </div>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="/">Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dashboard-container">
+        <div class="row justify-content-center">
+            <div class="col-12 text-center mb-4">
+                <h1>Patient Management Application</h1>
+            </div>
+            <div class="col-12 d-flex justify-content-center">
+                <a href="/database" class="dashboard-card customers-card rounded">
+                    <i class="bi bi-people-fill dashboard-icon"></i>
+                    <h4>Customers List</h4>
+                </a>
+                <a href="/add_patient" class="dashboard-card new-customer-card rounded">
+                    <i class="bi bi-person-plus-fill dashboard-icon"></i>
+                    <h4>New Customer</h4>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.checked = savedTheme === 'dark';
+
+        themeToggle.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
+</body>
+</html>
