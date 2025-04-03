@@ -17,12 +17,19 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Use environment variable for database URL, fallback to SQLite for local development
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///patients_list.db')
+# Configure database
+database_url = os.getenv('DATABASE_URL', 'sqlite:///patients_list.db')
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Production configurations
 app.config['PREFERRED_URL_SCHEME'] = 'https'
+if os.getenv('FLASK_ENV') == 'production':
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 db = SQLAlchemy(app)
 
