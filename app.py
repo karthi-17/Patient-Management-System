@@ -17,19 +17,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Configure database
-database_url = os.getenv('DATABASE_URL', 'sqlite:///patients_list.db')
-if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+# Configure database - use MySQL for PythonAnywhere
+if 'PYTHONANYWHERE_DOMAIN' in os.environ:
+    # PythonAnywhere MySQL configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}'.format(
+        username='your-pythonanywhere-username',
+        password='your-database-password',  # You'll set this up on PythonAnywhere
+        hostname='your-pythonanywhere-username.mysql.pythonanywhere-services.com',
+        databasename='your-pythonanywhere-username$default'
+    )
+else:
+    # Local SQLite configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///patients_list.db'
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_POOL_RECYCLE'] = 299  # Recommended for PythonAnywhere MySQL
 
 # Production configurations
 app.config['PREFERRED_URL_SCHEME'] = 'https'
-if os.getenv('FLASK_ENV') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
 
 db = SQLAlchemy(app)
 
